@@ -90,6 +90,9 @@ func syncConfig(pebble goops.PebbleClient) error {
 		Source: source,
 		Path:   ConfigPath,
 	})
+	if err != nil {
+		return fmt.Errorf("could not push config to pebble: %w", err)
+	}
 
 	goops.LogInfof("Config file pushed to %s", ConfigPath)
 
