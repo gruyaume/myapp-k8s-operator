@@ -35,3 +35,11 @@ resources:
     type: oci-image
     description: OCI image for myapp
     upstream-source: ghcr.io/gruyaume/myapp:v0.0.1
+
+config:
+  options:
+    port:
+      type: int
+      default: 8080
+      description: >
+        The port on which the application will listen.
