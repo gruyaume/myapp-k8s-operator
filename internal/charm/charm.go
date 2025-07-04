@@ -59,16 +59,6 @@ func Configure() error {
 		return fmt.Errorf("could not set ports: %w", err)
 	}
 
-	i := &logging.Integration{
-		RelationName:  LoggingIntegrationName,
-		ContainerName: ContainerName,
-	}
-
-	err = i.EnableEndpoints()
-	if err != nil {
-		goops.LogWarningf("Could not enable logging endpoints: %v", err)
-	}
-
 	pebble := goops.Pebble(ContainerName)
 
 	_, err = pebble.SysInfo()
@@ -98,6 +88,16 @@ func Configure() error {
 		}
 
 		goops.LogInfof("Pebble service restarted")
+	}
+
+	i := &logging.Integration{
+		RelationName:  LoggingIntegrationName,
+		ContainerName: ContainerName,
+	}
+
+	err = i.EnableEndpoints()
+	if err != nil {
+		goops.LogDebugf("Could not enable logging endpoints: %v", err)
 	}
 
 	_ = goops.SetUnitStatus(goops.StatusActive, "service is running on port", fmt.Sprintf("%d", c.Port))
