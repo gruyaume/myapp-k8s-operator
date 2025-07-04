@@ -43,3 +43,7 @@ config:
       default: 8080
       description: >
         The port on which the application will listen.
+
+requires:
+  logging:
+    interface: loki_push_api
