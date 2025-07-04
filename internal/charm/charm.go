@@ -6,12 +6,16 @@ import (
 	"strings"
 
 	"github.com/canonical/pebble/client"
+	"github.com/gruyaume/charm-libraries/logging"
 	"github.com/gruyaume/goops"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	ConfigPath = "/etc/myapp/config.yaml"
+	ConfigPath             = "/etc/myapp/config.yaml"
+	LoggingIntegrationName = "logging"
+	ServiceName            = "myapp"
+	ContainerName          = "myapp"
 )
 
 type ServiceConfig struct {
@@ -55,7 +59,7 @@ func Configure() error {
 		return fmt.Errorf("could not set ports: %w", err)
 	}
 
-	pebble := goops.Pebble("myapp")
+	pebble := goops.Pebble(ContainerName)
 
 	_, err = pebble.SysInfo()
 	if err != nil {
@@ -76,7 +80,7 @@ func Configure() error {
 	if configFileChanged {
 		_, err = pebble.Restart(
 			&client.ServiceOptions{
-				Names: []string{"myapp"},
+				Names: []string{ServiceName},
 			},
 		)
 		if err != nil {
@@ -84,6 +88,16 @@ func Configure() error {
 		}
 
 		goops.LogInfof("Pebble service restarted")
+	}
+
+	i := &logging.Integration{
+		RelationName:  LoggingIntegrationName,
+		ContainerName: ContainerName,
+	}
+
+	err = i.EnableEndpoints()
+	if err != nil {
+		goops.LogDebugf("Could not enable logging endpoints: %v", err)
 	}
 
 	_ = goops.SetUnitStatus(goops.StatusActive, "service is running on port", fmt.Sprintf("%d", c.Port))
@@ -96,11 +110,11 @@ type MyAppConfig struct {
 }
 
 func getExpectedConfig(port int) ([]byte, error) {
-	myappConfig := MyAppConfig{
+	c := MyAppConfig{
 		Port: port,
 	}
 
-	b, err := yaml.Marshal(myappConfig)
+	b, err := yaml.Marshal(c)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal config to YAML: %w", err)
 	}
@@ -151,7 +165,7 @@ func syncPebbleService(pebble goops.PebbleClient) error {
 	goops.LogInfof("Pebble layer created")
 
 	_, err = pebble.Start(&client.ServiceOptions{
-		Names: []string{"myapp"},
+		Names: []string{ServiceName},
 	})
 	if err != nil {
 		return fmt.Errorf("could not start pebble service: %w", err)
@@ -167,10 +181,10 @@ func addPebbleLayer(pebble goops.PebbleClient) error {
 		Summary:     "MyApp layer",
 		Description: "pebble config layer for MyApp",
 		Services: map[string]ServiceConfig{
-			"myapp": {
+			ServiceName: {
 				Override: "replace",
 				Summary:  "My App Service",
-				Command:  "myapp -config /etc/myapp/config.yaml",
+				Command:  "myapp -config " + ConfigPath,
 				Startup:  "enabled",
 			},
 		},
