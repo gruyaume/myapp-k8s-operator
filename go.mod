@@ -3,7 +3,7 @@ module myapp-k8s-operator
 go 1.24.6
 
 require (
-	github.com/canonical/pebble v1.25.0
+	github.com/canonical/pebble v1.26.0
 	github.com/google/go-cmp v0.7.0
 	github.com/gruyaume/charm-libraries/logging v0.0.0-20250701171023-ffdb6331787c
 	github.com/gruyaume/goops v0.0.23
